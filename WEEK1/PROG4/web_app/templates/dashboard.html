@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bảng điều khiển</title>
+</head>
+<body>
+    <h1>Chào mừng, {{ user }}!</h1>
+
+    <!-- Form tải ảnh lên -->
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Tải lên">
+    </form>
+
+    <h2>Danh sách ảnh:</h2>
+    <ul>
+        {% for image in images %}
+            <li>
+                <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
+                    <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}" width="150">
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="/logout">Đăng xuất</a>
+</body>
+</html>
