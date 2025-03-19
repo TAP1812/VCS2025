@@ -42,37 +42,43 @@ $messages = $conn->query("SELECT * FROM messages WHERE sender_id = {$user['id']}
 </head>
 <body class="bg-light">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="dashboard.php">Student Management System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="profile.php">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="assignment.php">Assignments</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="challenge.php">Challenges</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include 'header.php'; ?>
 
     <!-- Main Content -->
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-12">
                 <h1 class="mb-4">Student Detail: <?php echo $student['fullname']; ?></h1>
-                <div class="card shadow">
+
+                <!-- Thông tin chi tiết của sinh viên -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Student Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label"><strong>Username:</strong></label>
+                                    <p class="form-control-static"><?php echo $student['username']; ?></p>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label"><strong>Email:</strong></label>
+                                    <p class="form-control-static"><?php echo $student['email']; ?></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label"><strong>Phone:</strong></label>
+                                    <p class="form-control-static"><?php echo $student['phone']; ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form gửi tin nhắn -->
+                <div class="card shadow mb-4">
                     <div class="card-header bg-primary text-white">
                         <h5 class="card-title mb-0">Send Message</h5>
                     </div>
@@ -89,7 +95,8 @@ $messages = $conn->query("SELECT * FROM messages WHERE sender_id = {$user['id']}
                     </div>
                 </div>
 
-                <div class="card shadow mt-4">
+                <!-- Danh sách tin nhắn đã gửi -->
+                <div class="card shadow">
                     <div class="card-header bg-primary text-white">
                         <h5 class="card-title mb-0">Messages Sent</h5>
                     </div>

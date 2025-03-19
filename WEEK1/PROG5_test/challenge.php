@@ -43,10 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'student') {
     $stmt->close();
 
     // Kiểm tra đáp án
-    $file_name = pathinfo($challenge['file_path'], PATHINFO_FILENAME); // Lấy tên file không có đuôi
-    if (strtolower($answer) == strtolower($file_name)) {
+    $file_content = file_get_contents($challenge['file_path']);
+    if (strtolower($answer) == strtolower($file_content)) {
         // Đáp án đúng, hiển thị nội dung file
-        $file_content = file_get_contents($challenge['file_path']);
         $success_message = "Correct! Here is the content:<br><pre>{$file_content}</pre>";
     } else {
         // Đáp án sai
@@ -71,30 +70,7 @@ $challenges = $conn->query("SELECT * FROM challenges ORDER BY created_at DESC");
 </head>
 <body class="bg-light">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="dashboard.php">Student Management System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="profile.php">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="assignment.php">Assignments</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="challenge.php">Challenges</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include 'header.php'; ?>
 
     <!-- Main Content -->
     <div class="container mt-5">
@@ -160,7 +136,7 @@ $challenges = $conn->query("SELECT * FROM challenges ORDER BY created_at DESC");
                                                         <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
                                                     </div>
                                                     <div class='modal-body'>
-                                                        <form method='POST' action=''>
+                                                        <form method='POST' action='/challenge.php'>
                                                             <input type='hidden' name='challenge_id' value='{$row['id']}'>
                                                             <div class='mb-3'>
                                                                 <label for='answer' class='form-label'>Enter your answer</label>
