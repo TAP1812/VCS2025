@@ -1,8 +1,8 @@
 <?php
-    $host = 'db'; 
+    $host = 'localhost'; 
     $db = 'student_management';
-    $user = 'user';
-    $pass = 'password';
+    $user = 'root';
+    $pass = 'kalilinux';
 
     $conn = new mysqli($host, $user, $pass, $db);
 
