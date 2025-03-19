@@ -1,0 +1,202 @@
+<?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header('Location: login.php');
+}
+include 'db.php';
+
+$user = $_SESSION['user'];
+
+// Giáo viên tạo challenge
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'teacher') {
+    $hint = $_POST['hint'];
+    $file = $_FILES['file'];
+
+    // Kiểm tra file có phải là .txt không
+    $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($file_ext != 'txt') {
+        die("Only .txt files are allowed.");
+    }
+
+    // Lưu file vào thư mục uploads/challenges/
+    $target_dir = "uploads/challenges/";
+    $target_file = $target_dir . basename($file['name']);
+    move_uploaded_file($file['tmp_name'], $target_file);
+
+    // Lưu thông tin challenge vào database
+    $stmt = $conn->prepare("INSERT INTO challenges (hint, file_path) VALUES (?, ?)");
+    $stmt->bind_param("ss", $hint, $target_file);
+    $stmt->execute();
+    $stmt->close();
+}
+
+// Sinh viên tham gia giải đố
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'student') {
+    $challenge_id = $_POST['challenge_id'];
+    $answer = $_POST['answer'];
+
+    // Lấy thông tin challenge
+    $stmt = $conn->prepare("SELECT * FROM challenges WHERE id = ?");
+    $stmt->bind_param("i", $challenge_id);
+    $stmt->execute();
+    $challenge = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    // Kiểm tra đáp án
+    $file_name = pathinfo($challenge['file_path'], PATHINFO_FILENAME); // Lấy tên file không có đuôi
+    if (strtolower($answer) == strtolower($file_name)) {
+        // Đáp án đúng, hiển thị nội dung file
+        $file_content = file_get_contents($challenge['file_path']);
+        $success_message = "Correct! Here is the content:<br><pre>{$file_content}</pre>";
+    } else {
+        // Đáp án sai
+        $error_message = "Incorrect answer. Please try again.";
+    }
+}
+
+// Lấy danh sách challenge
+$challenges = $conn->query("SELECT * FROM challenges ORDER BY created_at DESC");
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenges</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.php">Student Management System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.php">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="assignment.php">Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="challenge.php">Challenges</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="logout.php">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="mb-4">Challenges</h1>
+
+                <!-- Giáo viên tạo challenge -->
+                <?php if ($user['role'] == 'teacher'): ?>
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Create Challenge</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="hint" class="form-label">Hint</label>
+                                    <textarea class="form-control" id="hint" name="hint" placeholder="Enter hint" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">Upload .txt file</label>
+                                    <input type="file" class="form-control" id="file" name="file" accept=".txt" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Create Challenge</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Danh sách challenge -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Challenges List</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Hint</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                while ($row = $challenges->fetch_assoc()) {
+                                    echo "<tr>
+                                            <td>{$row['hint']}</td>
+                                            <td>
+                                                <button class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#challengeModal{$row['id']}'>Solve</button>
+                                            </td>
+                                          </tr>";
+
+                                    // Modal để sinh viên giải đố
+                                    if ($user['role'] == 'student') {
+                                        echo "
+                                        <div class='modal fade' id='challengeModal{$row['id']}' tabindex='-1'>
+                                            <div class='modal-dialog'>
+                                                <div class='modal-content'>
+                                                    <div class='modal-header'>
+                                                        <h5 class='modal-title'>Solve Challenge</h5>
+                                                        <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+                                                    </div>
+                                                    <div class='modal-body'>
+                                                        <form method='POST' action=''>
+                                                            <input type='hidden' name='challenge_id' value='{$row['id']}'>
+                                                            <div class='mb-3'>
+                                                                <label for='answer' class='form-label'>Enter your answer</label>
+                                                                <input type='text' class='form-control' id='answer' name='answer' required>
+                                                            </div>
+                                                            <div class='d-grid'>
+                                                                <button type='submit' class='btn btn-primary'>Submit</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>";
+                                    }
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hiển thị kết quả giải đố -->
+                <?php if (isset($success_message)): ?>
+                    <div class="alert alert-success mt-4">
+                        <?php echo $success_message; ?>
+                    </div>
+                <?php elseif (isset($error_message)): ?>
+                    <div class="alert alert-danger mt-4">
+                        <?php echo $error_message; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
