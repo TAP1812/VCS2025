@@ -47,3 +47,14 @@ CREATE TABLE challenges (
     file_path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE challenge_status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    challenge_id INT,
+    status ENUM('solved', 'not solved') DEFAULT 'not solved',
+    solved_at TIMESTAMP NULL DEFAULT NULL,
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+    UNIQUE KEY unique_student_challenge (student_id, challenge_id)
+);

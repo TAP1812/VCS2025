@@ -6,23 +6,33 @@ if (!isset($_SESSION['user'])) {
 include 'db.php';
 
 $message_id = $_GET['id'];
+$user_id = $_SESSION['user']['id']; // Lấy ID của người dùng hiện tại
 
-// Lấy thông tin tin nhắn
+// Lấy thông tin tin nhắn để kiểm tra quyền và hiển thị form chỉnh sửa
 $stmt = $conn->prepare("SELECT * FROM messages WHERE id = ?");
 $stmt->bind_param("i", $message_id);
 $stmt->execute();
-$message = $stmt->get_result()->fetch_assoc();
+$result = $stmt->get_result();
+$message = $result->fetch_assoc();
 $stmt->close();
+
+// Kiểm tra xem người dùng hiện tại có phải là người gửi tin nhắn không
+if (!$message || $message['sender_id'] != $user_id) {
+    // Nếu không có quyền, hiển thị thông báo lỗi hoặc chuyển hướng
+    die("You do not have permission to edit this message.");
+}
 
 // Xử lý cập nhật tin nhắn
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $new_message = $_POST['message'];
 
+    // Cập nhật tin nhắn
     $stmt = $conn->prepare("UPDATE messages SET message = ? WHERE id = ?");
     $stmt->bind_param("si", $new_message, $message_id);
     $stmt->execute();
     $stmt->close();
 
+    // Chuyển hướng về trang chi tiết của người nhận
     header("Location: student_detail.php?id={$message['receiver_id']}");
 }
 ?>

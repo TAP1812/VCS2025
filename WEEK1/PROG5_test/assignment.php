@@ -4,7 +4,7 @@ if (!isset($_SESSION['user'])) {
     header('Location: login.php');
 }
 include 'db.php';
-
+include 'utils.php';
 $user = $_SESSION['user'];
 
 // Giáo viên tải file bài tập lên
@@ -12,30 +12,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'teacher') {
     $title = $_POST['title'];
     $description = $_POST['description'];
     $file = $_FILES['file'];
+    
+    if (isValidFile($file)) {
+        $target_dir = "uploads/assignments/";
+        $target_file = $target_dir . basename($file['name']);
+        move_uploaded_file($file['tmp_name'], $target_file);
 
-    $target_dir = "uploads/assignments/";
-    $target_file = $target_dir . basename($file['name']);
-    move_uploaded_file($file['tmp_name'], $target_file);
-
-    $stmt = $conn->prepare("INSERT INTO assignments (title, description, file_path) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $title, $description, $target_file);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO assignments (title, description, file_path) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $title, $description, $target_file);
+        $stmt->execute();
+        $stmt->close();
+    }
+    else {
+        echo "<script>alert('Invalid File');</script>\n";
+    }
 }
 
 // Học sinh upload bài làm
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'student') {
     $assignment_id = $_POST['assignment_id'];
     $file = $_FILES['submission'];
+    
+    if (isValidFile($file)) {
+        $target_dir = "uploads/submissions/";
+        $target_file = $target_dir . basename($file['name']);
+        move_uploaded_file($file['tmp_name'], $target_file);
 
-    $target_dir = "uploads/submissions/";
-    $target_file = $target_dir . basename($file['name']);
-    move_uploaded_file($file['tmp_name'], $target_file);
-
-    $stmt = $conn->prepare("INSERT INTO submissions (assignment_id, student_id, file_path) VALUES (?, ?, ?)");
-    $stmt->bind_param("iis", $assignment_id, $user['id'], $target_file);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO submissions (assignment_id, student_id, file_path) VALUES (?, ?, ?)");
+        $stmt->bind_param("iis", $assignment_id, $user['id'], $target_file);
+        $stmt->execute();
+        $stmt->close();
+    }
+    else {
+        echo "<script>alert('Invalid File');</script>\n";
+    }
 }
 
 // Lấy danh sách bài tập
@@ -75,7 +85,6 @@ if ($user['role'] == 'teacher') {
             <div class="col-md-12">
                 <h1 class="mb-4">Assignments</h1>
 
-                <!-- Giáo viên tạo bài tập -->
                 <?php if ($user['role'] == 'teacher'): ?>
                     <div class="card shadow mb-4">
                         <div class="card-header bg-primary text-white">
@@ -167,7 +176,6 @@ if ($user['role'] == 'teacher') {
                     </div>
                 </div>
 
-                <!-- Danh sách bài làm (chỉ giáo viên mới được xem) -->
                 <?php if ($user['role'] == 'teacher'): ?>
                     <div class="card shadow">
                         <div class="card-header bg-primary text-white">

@@ -4,7 +4,7 @@ if (!isset($_SESSION['user'])) {
     header('Location: login.php');
 }
 include 'db.php';
-
+include 'utils.php';
 $user = $_SESSION['user'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -12,12 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = $_POST['phone'];
     $avatar_url = $_POST['avatar_url'];
     $avatar_file = $_FILES['avatar'];
-
+    
     // Xử lý avatar
-    if (!empty($avatar_url)) {
+    if (!empty($avatar_url)&&isSafeUrl($avatar_url)) {
         // Nếu có URL, sử dụng URL làm avatar
         $avatar_path = $avatar_url;
-    } elseif (!empty($avatar_file['name'])) {
+    } elseif (!empty($avatar_file['name'])&&isImageFile($avatar_file)) {
         // Nếu upload file
         $target_dir = "uploads/avatars/";
         if (!is_dir($target_dir)) {
@@ -162,9 +162,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     <!-- Preview avatar khi nhập URL -->
     <script>
-        document.querySelector('[name="avatar_url"]').addEventListener('input', function(e) {
-            document.getElementById('avatarPreview').src = e.target.value || 'https://via.placeholder.com/150';
-        });
+    document.querySelector('[name="avatar_url"]').addEventListener('input', function(e) {
+        const url = e.target.value.trim();
+        const preview = document.getElementById('avatarPreview');
+        const defaultImage = 'https://via.placeholder.com/150';
+        
+        // Kiểm tra xem URL có hợp lệ không
+        try {
+            const urlObj = new URL(url);
+            const hostname = urlObj.hostname.toLowerCase();
+            
+            // Danh sách các hostname nội bộ cần chặn
+            const blockedHosts = [
+                'localhost',
+                '127.0.0.1',
+                '0.0.0.0',
+                '::1'  // IPv6 localhost
+            ];
+            
+            // Kiểm tra giao thức và hostname
+            if (!url || 
+                !['http:', 'https:'].includes(urlObj.protocol) || 
+                blockedHosts.includes(hostname) ||
+                hostname === '') {
+                preview.src = defaultImage;
+                return;
+            }
+            
+            preview.src = url;
+        } catch (error) {
+            // Nếu URL không hợp lệ, hiển thị ảnh mặc định
+            preview.src = defaultImage;
+        }
+    });
     </script>
 </body>
 </html>
