@@ -19,19 +19,16 @@ class ChallengeController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'hint' => 'required',
-            'file' => 'required|file|mimes:txt'
-        ]);
-
-        $path = $request->file('file')->store('challenges');
-        
-        Challenge::create([
-            'hint' => $validated['hint'],
-            'file_path' => $path
-        ]);
-
-        return redirect()->route('challenges.index');
+        try {
+            $path = $request->file('file')->store('challenges');
+            Challenge::create([
+                'hint' => $request->hint,
+                'file_path' => $path
+            ]);
+            return redirect()->route('challenges.index')->with('success', 'Challenge created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to create challenge'])->withInput();
+        }
     }
 
     public function solve(Request $request, Challenge $challenge)

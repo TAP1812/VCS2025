@@ -14,6 +14,6 @@ class MessagePolicy
 
     public function delete(User $user, Message $message)
     {
-        return $user->id === $message->sender_id || $user->id === $message->receiver_id;
+        return $user->id === $message->sender_id;
     }
 }
