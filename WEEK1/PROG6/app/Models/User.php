@@ -10,17 +10,37 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'username', 'password', 'full_name', 'email', 'phone', 'role'
+        'username',
+        'password', 
+        'fullname',
+        'email',
+        'phone',
+        'role',
+        'avatar'
     ];
 
     protected $hidden = [
-        'password', 'remember_token'
+        'password',
+        'remember_token',
     ];
 
-    // Quan hệ sẽ được thêm sau khi tạo các model khác
-
-    public function username()
+    public function isTeacher()
     {
-        return 'username';
+        return $this->role === 'teacher';
+    }
+
+    public function isStudent() 
+    {
+        return $this->role === 'student';
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class, 'student_id');
+    }
+
+    public function challengeStatuses()
+    {
+        return $this->hasMany(ChallengeStatus::class, 'student_id');
     }
 }

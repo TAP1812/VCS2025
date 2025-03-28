@@ -1,44 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .dashboard-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .dashboard-container button {
-            padding: 10px 15px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <h1>Chào mừng {{ auth()->user()->full_name }}!</h1>
-        <p>Vai trò: {{ auth()->user()->role }}</p>
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit">Đăng xuất</button>
-        </form>
+@extends('layouts.app')
+
+@section('content')
+<h1 class="mb-4">Welcome, {{ auth()->user()->username }}</h1>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Students List</h5>
     </div>
-</body>
-</html>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($students as $student)
+                    @if($student->id !== auth()->id())
+                        <tr>
+                            <td>{{ $student->username }}</td>
+                            <td>{{ $student->fullname }}</td>
+                            <td>{{ $student->email }}</td>
+                            <td>
+                                <a href="{{ route('users.show', $student) }}" class="btn btn-primary btn-sm">
+                                    View Profile
+                                </a>
+                            </td>
+                        </tr>
+                    @endif
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Received Messages</h5>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Message</th>
+                    <th>Sent At</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($receivedMessages as $message)
+                    <tr>
+                        <td>{{ $message->sender->fullname }}</td>
+                        <td>{{ $message->message }}</td>
+                        <td>{{ $message->created_at->diffForHumans() }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endsection
