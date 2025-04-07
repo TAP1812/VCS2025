@@ -34,6 +34,10 @@ function isSafeUrl($url) {
     return true;
 }
 
+function generateUniqueFilename($originalName) {
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    return uniqid() . '_' . time() . '.' . $ext;
+}
 
 function isImageFile($file) {
     $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];

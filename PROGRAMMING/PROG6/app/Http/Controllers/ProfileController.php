@@ -17,16 +17,14 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        
-        // Different validation rules based on role
+
         $validationRules = [
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable',
-            'avatar' => 'nullable|image|max:2048',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'avatar_url' => 'nullable|url'
         ];
 
-        // Add username and fullname validation only for teachers
         if ($user->isTeacher()) {
             $validationRules['username'] = 'required|unique:users,username,' . $user->id;
             $validationRules['fullname'] = 'required';
@@ -34,30 +32,42 @@ class ProfileController extends Controller
 
         $validated = $request->validate($validationRules);
 
-        // Handle avatar (file upload or URL)
-        if ($request->hasFile('avatar')) {
-            // Handle file upload
-            if ($user->avatar && Storage::exists($user->avatar)) {
-                Storage::delete($user->avatar);
+        try {
+            if ($request->hasFile('avatar')) {
+                // Delete old avatar if exists
+                if ($user->avatar && !filter_var($user->avatar, FILTER_VALIDATE_URL)) {
+                    Storage::delete($user->avatar);
+                }
+
+                // Store new avatar in private storage
+                $path = $request->file('avatar')->store('avatars', 'local');
+                $validated['avatar'] = $path;
+            } elseif ($request->filled('avatar_url')) {
+                if ($user->avatar && !filter_var($user->avatar, FILTER_VALIDATE_URL)) {
+                    Storage::delete($user->avatar);
+                }
+                $validated['avatar'] = $request->avatar_url;
             }
-            $path = $request->file('avatar')->store('avatars', 'public');
-            // dd($path);
-            $validated['avatar'] = $path;
-        } elseif ($request->filled('avatar_url')) {
-            // Handle URL-based avatar
-            if ($user->avatar && Storage::exists($user->avatar)) {
-                Storage::delete($user->avatar);
+
+            if (!$user->isTeacher()) {
+                unset($validated['username'], $validated['fullname']);
             }
-            $validated['avatar'] = $request->avatar_url;
+
+            $user->update($validated);
+
+            return redirect()->route('profile.show')->with('success', 'Profile updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withErrors(['avatar' => 'Error updating profile: ' . $e->getMessage()]);
         }
+    }
 
-        // Update only allowed fields based on role
-        if (!$user->isTeacher()) {
-            unset($validated['username'], $validated['fullname']);
+    // Add new method to serve private images
+    public function getAvatar($filename)
+    {
+        $path = 'avatars/' . $filename;
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404);
         }
-
-        $user->update($validated);
-
-        return redirect()->route('profile.show')->with('success', 'Profile updated successfully');
+        return response()->file(storage_path('app/private/' . $path));
     }
 }

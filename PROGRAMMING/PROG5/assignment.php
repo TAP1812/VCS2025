@@ -15,7 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'teacher') {
     
     if (isValidFile($file)) {
         $target_dir = "uploads/assignments/";
-        $target_file = $target_dir . basename($file['name']);
+        $new_filename = generateUniqueFilename($file['name']);
+        $target_file = $target_dir . $new_filename;
         move_uploaded_file($file['tmp_name'], $target_file);
 
         $stmt = $conn->prepare("INSERT INTO assignments (title, description, file_path) VALUES (?, ?, ?)");
@@ -35,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'student') {
     
     if (isValidFile($file)) {
         $target_dir = "uploads/submissions/";
-        $target_file = $target_dir . basename($file['name']);
+        $new_filename = generateUniqueFilename($file['name']);
+        $target_file = $target_dir . $new_filename;
         move_uploaded_file($file['tmp_name'], $target_file);
 
         $stmt = $conn->prepare("INSERT INTO submissions (assignment_id, student_id, file_path) VALUES (?, ?, ?)");

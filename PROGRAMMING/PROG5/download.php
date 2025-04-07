@@ -21,6 +21,9 @@ if ($real_path === false || $real_path !== $file_path) {
     exit('Invalid file path');
 }
 
+// Extract the filename from the path
+$file_name = basename($_GET['file']);
+
 // Đặt headers để tải file
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');

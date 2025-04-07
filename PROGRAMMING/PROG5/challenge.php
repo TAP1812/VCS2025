@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user['role'] == 'teacher' && isset(
 
     // Lưu file vào thư mục uploads/challenges/
     $target_dir = __DIR__ . "/uploads/challenges/";
-    $target_file = $target_dir . basename($file['name']);
+    $new_filename = generateUniqueFilename($file['name']);
+    $target_file = $target_dir . $new_filename;
     move_uploaded_file($file['tmp_name'], $target_file);
 
     // Lưu thông tin challenge vào database

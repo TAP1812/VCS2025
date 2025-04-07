@@ -25,7 +25,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-    
+
     // User routes
     Route::get('users', [DashboardController::class, 'users'])->name('users.index');
     Route::get('users/{user}', [DashboardController::class, 'showUser'])->name('users.show');
@@ -63,4 +63,10 @@ Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/avatar/{filename}', [ProfileController::class, 'getAvatar'])->name('avatar.show');
 });
+
+// Add this route to serve private avatars
+Route::get('/avatar/{filename}', [App\Http\Controllers\ProfileController::class, 'getAvatar'])
+    ->name('avatar.show')
+    ->middleware('auth');

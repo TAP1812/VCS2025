@@ -8,20 +8,31 @@
                 <div class="card-body text-center">
                     @if($user->avatar)
                         <div class="avatar-circle mb-4 mx-auto overflow-hidden" style="width: 150px; height: 150px;">
-                            <img src="{{ filter_var($user->avatar, FILTER_VALIDATE_URL) ? $user->avatar : ($user->avatar ? Storage::url($user->avatar) : 'https://via.placeholder.com/150') }}" alt="{{ $user->username }}" 
-                                 class="img-fluid rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                            @php
+                                $avatarUrl = filter_var($user->avatar, FILTER_VALIDATE_URL)
+                                    ? $user->avatar
+                                    : ($user->avatar
+                                        ? route('avatar.show', ['filename' => basename($user->avatar)])
+                                        : 'https://via.placeholder.com/150');
+                            @endphp
+                            <img src="{{ $avatarUrl }}"
+                                 alt="{{ $user->username }}"
+                                 class="img-fluid rounded-circle"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                     @else
                         <div class="avatar-circle mb-4 mx-auto" style="width: 150px; height: 150px;">
-                            <span class="avatar-text" style="font-size: 60px;">{{ substr($user->username, 0, 1) }}</span>
+                            <span class="avatar-text text-white" style="font-size: 60px;">
+                                {{ substr($user->username, 0, 1) }}
+                            </span>
                         </div>
                     @endif
-                    
+
                     <h2 class="fw-bold mb-3">{{ $user->fullname ?? $user->username }}</h2>
                     <span class="badge bg-{{ $user->role === 'admin' ? 'danger' : 'primary' }} mb-3">
                         {{ ucfirst($user->role) }}
                     </span>
-                    
+
                     <div class="profile-details text-start mt-4">
                         <div class="d-flex align-items-center mb-3">
                             <div>
@@ -29,14 +40,14 @@
                                 <strong>{{ $user->username }}</strong>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex align-items-center mb-3">
                             <div>
                                 <small class="text-muted d-block">Email</small>
                                 <strong>{{ $user->email }}</strong>
                             </div>
                         </div>
-                        
+
                         @if($user->phone)
                         <div class="d-flex align-items-center mb-3">
                             <div>
@@ -45,7 +56,7 @@
                             </div>
                         </div>
                         @endif
-                        
+
                         @if($user->fullname)
                         <div class="d-flex align-items-center">
                             <div>
@@ -58,7 +69,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
@@ -66,7 +77,7 @@
                     <form action="{{ route('messages.store', $user) }}" method="POST">
                         @csrf
                         <div class="form-group mb-3">
-                            <textarea name="message" class="form-control" rows="3" 
+                            <textarea name="message" class="form-control" rows="3"
                                 placeholder="Type your message here..." required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">
@@ -98,14 +109,14 @@
                                             </small>
                                             @if($message->sender_id === auth()->id())
                                                 <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-{{ $message->sender_id === auth()->id() ? 'light' : 'secondary' }} btn-sm" 
+                                                    <button class="btn btn-{{ $message->sender_id === auth()->id() ? 'light' : 'secondary' }} btn-sm"
                                                             data-bs-toggle="modal" data-bs-target="#editMessageModal{{ $message->id }}">Update
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                     <form action="{{ route('messages.destroy', $message) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-{{ $message->sender_id === auth()->id() ? 'light' : 'secondary' }} btn-sm" 
+                                                        <button type="submit" class="btn btn-{{ $message->sender_id === auth()->id() ? 'light' : 'secondary' }} btn-sm"
                                                                 onclick="return confirm('Delete this message?')">Delete
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -116,7 +127,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             @if($message->sender_id === auth()->id())
                                 <!-- Edit Message Modal -->
                                 <div class="modal fade" id="editMessageModal{{ $message->id }}" tabindex="-1">
